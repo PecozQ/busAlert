@@ -1,0 +1,57 @@
+{
+  "name": "busalert",
+  "private": true,
+  "version": "0.0.0",
+  "description": "a Sails application",
+  "keywords": [],
+  "dependencies": {
+    "@sailshq/connect-redis": "^3.2.1",
+    "@sailshq/lodash": "^3.10.3",
+    "@sailshq/socket.io-redis": "^5.2.0",
+    "async": "3.1.1",
+    "bcryptjs": "^2.4.3",
+    "connect-mongo": "1.1.0",
+    "crypto-random-string": "^3.1.0",
+    "firebase-admin": "^8.9.2",
+    "grunt": "1.0.4",
+    "husky": "^4.2.1",
+    "jsonwebtoken": "^8.5.1",
+    "machinepack-emailaddresses": "^0.4.0",
+    "passport": "^0.4.1",
+    "passport-facebook": "^3.0.0",
+    "passport-google-oauth": "^2.0.0",
+    "passport-local": "^1.0.0",
+    "passport-strategy": "^1.0.0",
+    "query-string": "^6.11.1",
+    "request": "^2.88.0",
+    "sails": "^1.5.3",
+    "sails-hook-custom-blueprints": "^1.0.0",
+    "sails-hook-deep-orm": "^1.0.2",
+    "sails-hook-grunt": "^5.0.0",
+    "sails-hook-orm": "^4.0.0",
+    "sails-hook-sockets": "^2.0.0",
+    "sails-mysql": "^3.0.0",
+    "sails-postgresql": "^5.0.1",
+    "sails-redis": "^1.0.0",
+    "uuid": "^3.4.0"
+  },
+  "devDependencies": {
+    "eslint": "5.16.0"
+  },
+  "scripts": {
+    "start": "NODE_ENV=production node app.js",
+    "test": "npm run lint && npm run custom-tests && echo 'Done.'",
+    "lint": "./node_modules/eslint/bin/eslint.js . --max-warnings=0 --report-unused-disable-directives && echo '✔  Your .js files look good.'",
+    "custom-tests": "echo \"(No other custom tests yet.)\" && echo"
+  },
+  "main": "app.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/kaviyarasanthirunavukkarasu/busalert.git"
+  },
+  "author": "kaviyarasanthirunavukkarasu",
+  "license": "",
+  "engines": {
+    "node": "^17.0"
+  }
+}
