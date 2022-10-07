@@ -40,7 +40,7 @@ async function updateDevice(req) {
     deviceDetails.vehicle = [...arr];
     await DeviceDetails.updateOne({deviceId: req.body.device}).set({...deviceDetails});
   } else {
-    await DeviceDetails.create({ vehicle: [req.params.id], deviceId: req.body.device });
+      await DeviceDetails.create({ vehicle: [req.params.id], deviceId: req.body.device });
   }
 }
 
@@ -107,9 +107,15 @@ module.exports = {
             console.log('the result is givne as5',req.body.device, result.vehicle.findIndex(id => req.params.id === id));
             console.log('the result is given as 6');
             result.vehicle.splice(result.vehicle.findIndex(id => req.params.id === id) , 1);
-            await DeviceDetails.updateOne({ id: result.id }).set({ vehicle: [...result.vehicle] });
+            if (result.vehicle.length > 0) {
+              await DeviceDetails.updateOne({ id: result.id }).set({ vehicle: [...result.vehicle] });
+            } else {
+              await DeviceDetails.destroy({id: result.id});
+            }
             await Vehicle.updateOne({ id: value.id }).set({ ...req.body });
+            if (!!req.body.device) {
             await updateDevice(req);
+            }
           }
         } else {
           if (!!req.body.device) {
