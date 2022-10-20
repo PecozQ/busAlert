@@ -7,6 +7,7 @@
 
 var request = require('request');
 const queryString = require('query-string');
+const DeviceDetails = require('../models/DeviceDetails');
 // calculate distance between two point
 function distance(lat1, lon1, lat2, lon2, unit) {
   if ((lat1 === lat2) && (lon1 === lon2)) {
@@ -172,6 +173,9 @@ module.exports = {
     }
     if (!req.body.latitude || !req.body.longitude || !req.body.type) {
       return res.badRequest({ error: 'Latitude or Longitude or type not found' });
+    }
+    if (!req.body && !req.body.vehicle) {
+      return res.badRequest({ error: 'Vehicle id not found' });
     }
     if (req.body && req.body.route && (req.body.type === 'Pickup' || req.body.type === 'Drop')) {
       try {
@@ -450,6 +454,20 @@ module.exports = {
                 Activity.create(activityData).fetch()
                    .exec((err, activity) => {
                      if (err) { return res.badRequest(err); }
+                     Vehicle.findOne({ id: req.body.vehicle }).exec((err, vehicle) => {
+                      if(err) { return res.badRequest(err);}
+                      if (!!vehicle.device) {
+                        DeviceDetails.findOne({deviceId: vehicle.device}).exec((err, device) => {
+                          if(err) { return res.badRequest(err);}
+                            let deviceData = {
+                              activity: activity.id,
+                              latitude: req.body.latitude,
+                              longitude: req.body.longitude
+                            };
+                            DeviceDetails.updateOne({id: device.deviceId}).set({deviceData});
+                          });
+                      }
+                     });
                      return res.json(activity);
                    });
               } else {
