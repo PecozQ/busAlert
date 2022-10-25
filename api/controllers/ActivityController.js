@@ -466,7 +466,7 @@ module.exports = {
                               latitude: req.body.latitude,
                               longitude: req.body.longitude
                             };
-                            await DeviceDetails.updateOne({id: device.id}).set({deviceData});
+                            await DeviceDetails.updateOne({id: device.id}).set({...deviceData});
                             console.log('the device details is given as:', device);
                             return res.json(activity);
                           });
