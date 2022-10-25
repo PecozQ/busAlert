@@ -458,7 +458,7 @@ module.exports = {
                       if(err) { return res.badRequest(err);}
                       console.log('the vehicle is given as:', vehicle);
                       if (!!vehicle.device) {
-                        DeviceDetails.findOne({deviceId: vehicle.device}).exec((err, device) => {
+                        DeviceDetails.findOne({deviceId: vehicle.device}).exec(async (err, device) => {
                           console.log('the device details is given as:', device);
                           if(err) { return res.badRequest(err);}
                             let deviceData = {
@@ -466,7 +466,8 @@ module.exports = {
                               latitude: req.body.latitude,
                               longitude: req.body.longitude
                             };
-                            DeviceDetails.updateOne({id: device.deviceId}).set({deviceData});
+                            await DeviceDetails.updateOne({id: device.deviceId}).set({deviceData});
+                            console.log('the device details is given as:', device);
                             return res.json(activity);
                           });
                       } else {
