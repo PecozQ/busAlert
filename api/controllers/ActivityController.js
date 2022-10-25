@@ -435,7 +435,7 @@ module.exports = {
                   passenger: passengerIds,
                   stopping: stoppingIds,
                   branch: route.branch,
-                  // vehicle: relation.vehicle,
+                  vehicle: req.body.vehicle,
                   route: route.id,
                   driver: req.profile.id,
                   mapDetail: {
