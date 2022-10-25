@@ -7,7 +7,6 @@
 
 var request = require('request');
 const queryString = require('query-string');
-const DeviceDetails = require('../models/DeviceDetails');
 // calculate distance between two point
 function distance(lat1, lon1, lat2, lon2, unit) {
   if ((lat1 === lat2) && (lon1 === lon2)) {
