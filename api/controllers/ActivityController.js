@@ -453,10 +453,13 @@ module.exports = {
                 Activity.create(activityData).fetch()
                    .exec((err, activity) => {
                      if (err) { return res.badRequest(err); }
+                     console.log('the activity is given as:', activity);
                      Vehicle.findOne({ id: req.body.vehicle }).exec((err, vehicle) => {
                       if(err) { return res.badRequest(err);}
+                      console.log('the vehicle is given as:', vehicle);
                       if (!!vehicle.device) {
                         DeviceDetails.findOne({deviceId: vehicle.device}).exec((err, device) => {
+                          console.log('the device details is given as:', device);
                           if(err) { return res.badRequest(err);}
                             let deviceData = {
                               activity: activity.id,
@@ -464,10 +467,12 @@ module.exports = {
                               longitude: req.body.longitude
                             };
                             DeviceDetails.updateOne({id: device.deviceId}).set({deviceData});
+                            return res.json(activity);
                           });
+                      } else {
+                        return res.json(activity);
                       }
                      });
-                     return res.json(activity);
                    });
               } else {
                 return res.badRequest({ error: 'Map data not found' });
