@@ -7,135 +7,25 @@
 
 module.exports = {
   positionActivity: async function (req, res) {
-    if (req.body && req.body.activity) {
-      Activity.findOne({ id: req.body.activity })
-          .exec(async (err, activity) => {
-            if (err) { return res.serverError(err); }
-            if (!activity) { return res.badRequest({ error: 'Activity not found' }); }
-            if (!activity.mapDetail) { return res.badRequest({ error: 'Mapdetails not found' }); }
-            if (!activity.mapDetail.points) { return res.badRequest({ error: 'Mapdetail points not found' }); }
-            let points = activity.mapDetail.points;
-            let pointOccured = true;
-            let reachMeter = 500;
-            let maxRoadMeter = 20;
-            let mapDetail = activity.mapDetail;
-            if (mapDetail.isReachedEndPoint) {
-              return res.badRequest({ error: 'End Location Reached' });
-            }
-            let oldPointIndex = (mapDetail.currentPointIndex - 1) >= 0 ? (mapDetail.currentPointIndex - 1) : 0;
-            // mapDetail.currentPointIndex++;
-            let currentNotifyUser = [];
-            console.log('lat: ' + req.body.latitude + ', lng: ' + req.body.longitude);
-            // check lat long avail in points
-            while (pointOccured) {
-              console.log('currentIndex in points -------> ', mapDetail.currentPointIndex);
-              if (mapDetail.currentPointIndex >= points.length) {
-                return res.badRequest({ error: 'Out of Route Points' });
-              }
-              // check the lat long reached the map start point
-              if (!mapDetail.isReachedStartPoint) {
-                let checkPoint = true;
-                let startPoint = 0;
-                let endPoint = 1;
-                let checkedDistance = 0;
-                while (checkPoint) {
-                  console.log('start and end point', startPoint, '----', endPoint);
-                  //check the lat long available in any points in given maximamum meter(reachMeter). eg: 500
-                  if (checkDistanceDif(points[startPoint], points[endPoint],
-                    { lat: req.body.latitude, lng: req.body.longitude }, maxRoadMeter)) {
-                    mapDetail.isReachedStartPoint = true;
-                    mapDetail.currentPointIndex = endPoint;
-                    checkPoint = false;
-                    pointOccured = false;
-                    // check the user alert point is available before the startpoint
-                    // for (j = mapDetail.currentPointIndex; j >= 0; j--) {
-                    //   if (activity.notificationDetail &&
-                    //     activity.notificationDetail.notifiyUser &&
-                    //     activity.notificationDetail.notifiyUser.length) {
-                    let users = _.filter(activity.notificationDetail.notifiyUser, (o) => {
-                      return (o.alertpointIndex <= mapDetail.currentPointIndex && o.isNotified === false);
-                    });
-                    if (users && users.length) {
-                      await checkPassengerList(users, mapDetail.currentPointIndex, req.body, activity, points);
-                    }
-                    //   }
-                    // }
-                    break;
-                  } else {
-                    checkedDistance += Math.round(distance(points[startPoint].lat, points[startPoint].lng,
-                      points[endPoint].lat, points[endPoint].lng) * 1000);
-                    if (checkedDistance >= reachMeter) {
-                      break;
-                    }
-                    startPoint = endPoint;
-                    endPoint++;
-                  }
-                }
-                // check the distance between map first point and given lat long
-                // and chec which is below than given maximamum meter(reachMeter). eg: 500
-                if (checkPoint && checkedDistance >= 500) {
-                  if (Math.abs(distance(points[oldPointIndex].lat, points[oldPointIndex].lng, req.body.latitude, req.body.longitude) * 1000) > 500) {
-                    return res.badRequest({ error: 'Out of Range' });
-                  }
-                  break;
-                }
-              } else {
-                // check lat long available in current point
-                if (checkDistanceDif(points[oldPointIndex], points[mapDetail.currentPointIndex],
-                  { lat: req.body.latitude, lng: req.body.longitude }, maxRoadMeter)) {
-                  pointOccured = false;
-                  // send notification to previous point
-                  if (currentNotifyUser && currentNotifyUser.length) {
-                    await checkPassengerList(currentNotifyUser, mapDetail.currentPointIndex, req.body, activity, points);
-                  }
-                  // check notify user is avialble in this point
-                  if (activity.notificationDetail &&
-                    activity.notificationDetail.notifiyUser &&
-                    activity.notificationDetail.notifiyUser.length) {
-                    currentNotifyUser = _.filter(activity.notificationDetail.notifiyUser, {
-                      alertpointIndex: mapDetail.currentPointIndex, isNotified: false
-                    });
-                    if (currentNotifyUser && currentNotifyUser.length) {
-                      await checkPassengerList(currentNotifyUser, mapDetail.currentPointIndex, req.body, activity, points);
-                    }
-                  }
-                } else {
-                  oldPointIndex = mapDetail.currentPointIndex;
-                  mapDetail.currentPointIndex++;
-                  continue;
-                }
-                let users = _.filter(activity.notificationDetail.notifiyUser, (o) => {
-                  return (o.alertpointIndex <= oldPointIndex && o.isNotified === false);
-                });
-                if (users && users.length) {
-                  await checkPassengerList(users, oldPointIndex, req.body, activity, points);
-                }
-              }
-            }
-            Activity.updateOne({ id: activity.id })
-              .set({ mapDetail: mapDetail, notificationDetail: activity.notificationDetail }).exec((err) => {
-                if (err) { return res.badRequest(err); }
-                req.body['time'] = new Date().toLocaleTimeString('en-US');
-                Geoposition.create(req.body).fetch().exec((err, geoposition) => {
-                  if (err) { return res.badRequest(err); }
-                  return res.json(geoposition);
-                });
-              });
-          });
-    } else {
-      Geoposition.create(req.body).fetch()
-          .exec((err, geoposition) => {
-            if (err) { return res.badRequest(err); }
-            sails.sockets.blast('geoposition', {
-              verb: 'created',
-              id: message.id,
-              data: {
-                text: message.text
-              }
-            }, env.req);
-            return res.json(geoposition);
-          });
-    }
+    positionActivityHelper(req.body.activity, req.body.latitude, req.body.longitude)
+    .then((resp) => {
+       return res.json(resp);
+    })
+    .catch((e) => {
+      return res.badRequest(e);
+    })
+  },
+  positionActivityHelpers: async function(activityId, latitude, longitude) {
+    return new Promise((resolve, reject) => {
+      positionActivityHelper(activityId, latitude, longitude)
+      .then((resp) => {
+        console.log('the resp is given as:', resp);
+        resolve(resp);
+      })
+      .catch((e) => {
+        reject(e);
+      })
+    })
   }
 };
 /**
@@ -235,5 +125,148 @@ async function checkPassengerList(notifyUsers, pointIndex, data, activity, point
   }, (err) => {
     if (err) { console.log(err); }
     // cb(err, activity);
+  });
+}
+
+function positionActivityHelper(activityId, latitude, longitude) {
+  return new Promise((resolve, reject) => {
+    let data = {
+      latitude: latitude,
+      longitude: longitude,
+      activity: activityId
+    }
+    console.log('the activity id is givne as:', activityId);
+    if (!!activityId) {
+      console.log('the activityid is present:', activityId);
+      Activity.findOne({ id: activityId })
+      .exec(async (err, activity) => {
+        console.log('the activity is givne as:', activity);
+        if (err) { reject(err); }
+        if (!activity) { reject({ error: 'Activity not found' }); }
+        if (!activity.mapDetail) {  reject({ error: 'Mapdetails not found' }); }
+        if (!activity.mapDetail.points) { reject({ error: 'Mapdetail points not found' }); }
+        let points = activity.mapDetail.points;
+        let pointOccured = true;
+        let reachMeter = 500;
+        let maxRoadMeter = 20;
+        let mapDetail = activity.mapDetail;
+        if (mapDetail.isReachedEndPoint) {
+          reject({ error: 'End Location Reached' });
+        }
+        let oldPointIndex = (mapDetail.currentPointIndex - 1) >= 0 ? (mapDetail.currentPointIndex - 1) : 0;
+        // mapDetail.currentPointIndex++;
+        let currentNotifyUser = [];
+        console.log('lat: ' + latitude + ', lng: ' + longitude);
+        // check lat long avail in points
+        while (pointOccured) {
+          console.log('currentIndex in points -------> ', mapDetail.currentPointIndex);
+          if (mapDetail.currentPointIndex >= points.length) {
+            reject({ error: 'Out of Route Points' });
+          }
+          // check the lat long reached the map start point
+          if (!mapDetail.isReachedStartPoint) {
+            let checkPoint = true;
+            let startPoint = 0;
+            let endPoint = 1;
+            let checkedDistance = 0;
+            while (checkPoint) {
+              console.log('start and end point', startPoint, '----', endPoint);
+              //check the lat long available in any points in given maximamum meter(reachMeter). eg: 500
+              if (checkDistanceDif(points[startPoint], points[endPoint],
+                { lat: latitude, lng: longitude }, maxRoadMeter)) {
+                mapDetail.isReachedStartPoint = true;
+                mapDetail.currentPointIndex = endPoint;
+                checkPoint = false;
+                pointOccured = false;
+                // check the user alert point is available before the startpoint
+                // for (j = mapDetail.currentPointIndex; j >= 0; j--) {
+                //   if (activity.notificationDetail &&
+                //     activity.notificationDetail.notifiyUser &&
+                //     activity.notificationDetail.notifiyUser.length) {
+                let users = _.filter(activity.notificationDetail.notifiyUser, (o) => {
+                  return (o.alertpointIndex <= mapDetail.currentPointIndex && o.isNotified === false);
+                });
+                if (users && users.length) {
+                  await checkPassengerList(users, mapDetail.currentPointIndex, data, activity, points);
+                }
+                //   }
+                // }
+                break;
+              } else {
+                checkedDistance += Math.round(distance(points[startPoint].lat, points[startPoint].lng,
+                  points[endPoint].lat, points[endPoint].lng) * 1000);
+                if (checkedDistance >= reachMeter) {
+                  break;
+                }
+                startPoint = endPoint;
+                endPoint++;
+              }
+            }
+            // check the distance between map first point and given lat long
+            // and chec which is below than given maximamum meter(reachMeter). eg: 500
+            if (checkPoint && checkedDistance >= 500) {
+              if (Math.abs(distance(points[oldPointIndex].lat, points[oldPointIndex].lng, latitude, longitude) * 1000) > 500) {
+                reject({ error: 'Out of Range' });
+              }
+              break;
+            }
+          } else {
+            // check lat long available in current point
+            if (checkDistanceDif(points[oldPointIndex], points[mapDetail.currentPointIndex],
+              { lat: latitude, lng: longitude }, maxRoadMeter)) {
+              pointOccured = false;
+              // send notification to previous point
+              if (currentNotifyUser && currentNotifyUser.length) {
+                await checkPassengerList(currentNotifyUser, mapDetail.currentPointIndex, data, activity, points);
+              }
+              // check notify user is avialble in this point
+              if (activity.notificationDetail &&
+                activity.notificationDetail.notifiyUser &&
+                activity.notificationDetail.notifiyUser.length) {
+                currentNotifyUser = _.filter(activity.notificationDetail.notifiyUser, {
+                  alertpointIndex: mapDetail.currentPointIndex, isNotified: false
+                });
+                if (currentNotifyUser && currentNotifyUser.length) {
+                  await checkPassengerList(currentNotifyUser, mapDetail.currentPointIndex, data, activity, points);
+                }
+              }
+            } else {
+              oldPointIndex = mapDetail.currentPointIndex;
+              mapDetail.currentPointIndex++;
+              continue;
+            }
+            let users = _.filter(activity.notificationDetail.notifiyUser, (o) => {
+              return (o.alertpointIndex <= oldPointIndex && o.isNotified === false);
+            });
+            if (users && users.length) {
+              await checkPassengerList(users, oldPointIndex, data, activity, points);
+            }
+          }
+        }
+        Activity.updateOne({ id: activity.id })
+          .set({ mapDetail: mapDetail, notificationDetail: activity.notificationDetail }).exec((err) => {
+            if (err) { reject(err); }
+            data['time'] = new Date().toLocaleTimeString('en-US');
+            Geoposition.create(data).fetch().exec((err, geoposition) => {
+              if (err) { reject(err); }
+              resolve(geoposition);
+            });
+          });
+      });
+    } else {
+      console.log('the activityid is not present:', activityId);
+      Geoposition.create(data).fetch()
+          .exec((err, geoposition) => {
+            if (err) { reject(err); }
+            sails.sockets.blast('geoposition', {
+              verb: 'created',
+              id: message.id,
+              data: {
+                text: message.text
+              }
+            }, env.req);
+            resolve(geoposition);
+          });
+    }
   });
 }

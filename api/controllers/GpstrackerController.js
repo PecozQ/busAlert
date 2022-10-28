@@ -49,6 +49,10 @@
 //   }
 // };
 
+const { selectSeries } = require("async");
+const { serializeUser } = require("passport");
+var geoPositionController = require('./GeopositionController');
+
 var device = async (dataItr) => {
   var getDevice = await DeviceDetails.findOne({ deviceId: dataItr.deviceId });
   if (!!getDevice) {
@@ -59,9 +63,11 @@ var device = async (dataItr) => {
       longitude: dataItr.longitude
     }
     if (!!getDevice.activity) {
-      return Geoposition.create(payload).fetch();
+      const resp = await geoPositionController.positionActivityHelpers(getDevice.activity, dataItr.latitude, dataItr.longitude);
+      return resp;
+    } else {
+      return { message: 'activity ID not found' };
     }
-    return { message: 'activity ID not found' };
   } else {
     await DeviceDetails.create({latitude: dataItr.latitude, longitude: dataItr.longitude, deviceId: dataItr.deviceId, vehicle: []});
     return { message: 'activity ID not found' };
