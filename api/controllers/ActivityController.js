@@ -471,16 +471,16 @@ module.exports = {
                             // The device is present so the geoposition should not be called 
                             // from the app as it will be called from the device
                             return res.json({ 
-                              status: 1,
-                              activity: activity
+                              ...activity,
+                              status: 1
                             });
                           });
                       } else {
                         // The device is not present so the geoposition should be called 
                         // from the app as it will be not called from the device
-                        return res.json({
-                          status: 2,
-                          activity: activity
+                        return res.json({ 
+                          ...activity,
+                          status: 1
                         });
                       }
                      });
