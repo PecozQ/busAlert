@@ -30,7 +30,9 @@ module.exports = function (req, res, next) {
   //   });
   // }
   // no? then check for a JWT token in the header
-  if (req.header('Authorization')) {
+  if (req.originalUrl.includes('gpsTracker')) {
+    return next();
+  } else if (req.header('Authorization')) {
     // if one exists, attempt to get the header data
     var token = req.header('Authorization').split('Bearer ')[1];
     // if there's nothing after "Bearer", no go
