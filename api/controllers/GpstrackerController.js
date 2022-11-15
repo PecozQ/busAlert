@@ -80,6 +80,9 @@ module.exports = {
   gpsTracker: async function (req, res) {
     if (Array.isArray(req.body.data) && req.body.data.length > 0) {
       var result = await Promise.all(req.body.data.map(async (item) => {
+        item.deviceId = typeof item.device_id === String ?  parseInt(item.device_id) : item.device_id;
+        item.latitude = typeof item.latitude === String ?  parseFloat(item.latitude) : item.latitude;
+        item.longitude = typeof item.longitude === String ?  parseFloat(item.longitude) : item.longitude;
         var updatingObject = {
           latitude: item.latitude,
           longitude: item.longitude
