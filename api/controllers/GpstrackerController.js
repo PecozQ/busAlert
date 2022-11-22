@@ -54,6 +54,7 @@ const { serializeUser } = require("passport");
 var geoPositionController = require('./GeopositionController');
 
 var device = async (dataItr) => {
+  console.log('the device details is given as:', dataItr, new Date().getTime());
   var getDevice = await DeviceDetails.findOne({ deviceId: dataItr.deviceId });
   if (!!getDevice) {
     await DeviceDetails.updateOne({ id: getDevice.id }).set({ latitude: dataItr.latitude, longitude: dataItr.longitude });
@@ -78,6 +79,7 @@ var device = async (dataItr) => {
 
 module.exports = {
   gpsTracker: async function (req, res) {
+    console.log('the req is given as:', req.body, new Date().getTime());
     if (Array.isArray(req.body.data) && req.body.data.length > 0) {
       var result = await Promise.all(req.body.data.map(async (item) => {
         item.deviceId = typeof item.device_id === String ?  parseInt(item.device_id) : item.device_id;
