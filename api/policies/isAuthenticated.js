@@ -43,7 +43,7 @@ module.exports = function (req, res, next) {
     // if there is something, attempt to parse it as a JWT token
     return jwt.verify(token, sails.config.custom.jwtSecretKey, async (err, payload) => {
       if (err && err.name === 'TokenExpiredError') {
-        if (req.url === '/api/v1/refreshToken') {
+        if (req.url === '/v1/refreshToken') {
           return next('');
         } else {
           res.status(401);

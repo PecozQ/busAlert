@@ -37,7 +37,7 @@ module.exports.blueprints = {
   ***************************************************************************/
 
   shortcuts: true,
-  prefix: '/api/v1',
+  prefix: '/v1',
   parseBlueprintOptions: function(req) {
 
     // Get the default query options.
