@@ -21,11 +21,11 @@ module.exports.policies = {
 
   '*': 'isAuthenticated',
 
-  // UserController: {
-  //   // '*': 'isAuthenticated',
-  //   login: false,
-  //   register: false,
-  //   checkNumber: true
-  // },
+  UserController: {
+    '*': 'isAuthenticated',
+    login: true,
+    register: true,
+    checkNumber: true
+  },
 
 };
