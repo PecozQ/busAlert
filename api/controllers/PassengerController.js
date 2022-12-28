@@ -126,5 +126,17 @@ module.exports = {
     } else {
       return res.badRequest({ error: 'Activity Id not found!' });
     }
+  },
+  deletePassenger: async function(req, res) {
+    console.log('the passenger is given as:', req.params.id, typeof(req.params.id));
+    if (req.params.id ) {
+      const deletedPassenger = await Passenger.destroy({id: req.params.id}).fetch();
+      console.log('the passenger is given as:', deletedPassenger);
+      await Passengercaretaker.destroy({ passenger: req.params.id });
+      // console.log('the deleted is ginve as:', deletePassenger);
+      return res.ok(deletedPassenger);
+    } else {
+      return res.badRequest({ error: 'Passenger Id not found!' });
+    }
   }
 };

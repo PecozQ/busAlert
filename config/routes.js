@@ -59,5 +59,6 @@ module.exports.routes = {
   'POST /v1/addDevice': 'VehicleDetailsController.addDevice',
   'POST /v1/addVehicle': 'VehicleController.addVehicle',
   'POST /v1/deleteVehicle/:id': 'VehicleController.deleteVehicle',
-  'PUT /v1/updateVehicle/:id': 'VehicleController.updateVehicle'
+  'PUT /v1/updateVehicle/:id': 'VehicleController.updateVehicle',
+  'PUT /v1/passenger/:id': 'PassengerController.deletePassenger'
 };
